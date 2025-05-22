@@ -6,8 +6,8 @@ RUN npm install -g pnpm@9
 FROM pnpm-base AS builder
 WORKDIR /app
 
-# 设置Prisma只下载linux-musl-openssl-3.0.x平台的二进制文件
-ENV PRISMA_CLI_BINARY_TARGETS=linux-musl-openssl-3.0.x
+# 设置Prisma使用native二进制目标，自动适配当前平台
+ENV PRISMA_CLI_BINARY_TARGETS="native"
 
 # 安装构建依赖
 RUN apk add --no-cache --virtual .build-deps \
@@ -27,8 +27,13 @@ RUN apk add --no-cache --virtual .build-deps \
 COPY package.json pnpm-lock.yaml .npmrc ./
 RUN pnpm install
 
-# 复制源代码并构建
+# 复制源代码
 COPY . .
+
+# 修改schema.prisma文件，只保留Docker镜像需要的两个平台
+RUN sed -i 's/binaryTargets = \[.*\]/binaryTargets = \["linux-musl-openssl-3.0.x", "linux-musl-arm64-openssl-3.0.x"\]/' prisma/schema.prisma
+
+# 构建应用
 RUN pnpm build
 
 # 构建完成后移除开发依赖，只保留生产依赖
