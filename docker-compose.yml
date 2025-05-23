@@ -1,0 +1,9 @@
+services:
+  easy-dataset:
+    image: ghcr.io/ddddd12138/easy-dataset
+    container_name: easy-dataset
+    ports:
+      - '1717:1717'
+    volumes:
+      - ${LOCAL_DB_PATH}:/app/local-db
+    restart: unless-stopped
